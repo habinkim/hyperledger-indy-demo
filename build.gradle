@@ -1,0 +1,53 @@
+plugins {
+    id 'org.springframework.boot' version '2.7.0'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+}
+
+group = 'com.bpnsolution'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+    all {
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://repo.sovrin.org/repository/maven-public"
+    }
+}
+
+dependencies {
+//    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+//    implementation 'org.hyperledger:indy:1.16.0'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'commons-io:commons-io:2.11.0'
+//    // ------------------------------------ org.hyperledger.indy dependencies ------------------------------------
+    implementation 'net.java.dev.jna:jna:5.11.0'
+    implementation 'junit:junit:4.13.2'
+    implementation 'org.bitcoinj:bitcoinj-core:0.16.1'
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'org.apache.logging.log4j:log4j-core:2.17.2'
+    testImplementation 'org.slf4j:slf4j-log4j12:2.0.0-alpha7'
+    testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.2'
+    implementation 'org.json:json:20220320'
+//    // ------------------------------------ org.hyperledger.indy dependencies ------------------------------------
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+    annotationProcessor 'org.projectlombok:lombok'
+    implementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
