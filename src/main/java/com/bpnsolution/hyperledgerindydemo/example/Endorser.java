@@ -112,7 +112,11 @@ public class Endorser {
 		//  Transaction Endorser signs the request
 		String schemaRequestWithEndorserSigned =
 				multiSignRequest(endorserWallet, endorserDid, schemaRequestWithEndorserAuthorSigned).get();
-		// 여기서 문제 생김, 지갑이나 원장에서 Endorser의 DID가 누락됨
+		// 여기서 문제 생김, 지갑이나 원장에서 Endorser가 누락됨
+		// Endorser의 Request는 누가 승인하는가?
+		// Endorser가 여러명 있어야하는가?
+		// 각 Node에 Endorser들이 생성되는가?
+		// 어느 Node에 접속해서 하는가?
 		log.info("schemaRequestWithEndorserSigned : {}" + schemaRequestWithEndorserSigned);
 
 		//  Transaction Endorser sends the request
@@ -134,6 +138,5 @@ public class Endorser {
 		Wallet.deleteWallet(endorserWalletConfig, endorserWalletCredentials).get();
 
 		System.out.println("Endorser sample -> completed");
-
 	}
 }

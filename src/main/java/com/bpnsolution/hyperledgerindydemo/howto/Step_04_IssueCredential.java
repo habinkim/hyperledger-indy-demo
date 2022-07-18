@@ -1,5 +1,6 @@
 package com.bpnsolution.hyperledgerindydemo.howto;
 
+import com.bpnsolution.hyperledgerindydemo.example.util.PoolUtils;
 import org.hyperledger.indy.sdk.IndyException;
 import org.hyperledger.indy.sdk.anoncreds.Anoncreds;
 import org.hyperledger.indy.sdk.anoncreds.AnoncredsResults;
@@ -8,23 +9,25 @@ import org.hyperledger.indy.sdk.did.DidResults;
 import org.hyperledger.indy.sdk.pool.Pool;
 import org.hyperledger.indy.sdk.wallet.Wallet;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
+import static com.bpnsolution.hyperledgerindydemo.example.util.PoolUtils.PROTOCOL_VERSION;
 import static org.hyperledger.indy.sdk.anoncreds.Anoncreds.*;
 import static org.hyperledger.indy.sdk.ledger.Ledger.*;
 
 public class Step_04_IssueCredential {
 
-	public static void main(String[] args) throws IndyException, ExecutionException, InterruptedException {
+	public static void main(String[] args) throws IndyException, ExecutionException, InterruptedException, IOException {
 		String walletName = "myWallet";
+
 		String poolName = "pool";
 		String stewardSeed = "000000000000000000000000Steward1";
-		String poolConfig = "{\"genesis_txn\": \"/Users/habin/indy-sdk/cli/docker_pool_transactions_genesis\"}";
-
+		Pool.setProtocolVersion(PROTOCOL_VERSION).get();
 
 		// 1.
 		System.out.println("\n1. Creating a new local pool ledger configuration that can be used later to connect pool nodes.\n");
-		Pool.createPoolLedgerConfig(poolName, poolConfig).get();
+		PoolUtils.createPoolLedgerConfig(poolName);
 
 		// 2
 		System.out.println("\n2. Open pool ledger and get the pool handle from libindy.\n");

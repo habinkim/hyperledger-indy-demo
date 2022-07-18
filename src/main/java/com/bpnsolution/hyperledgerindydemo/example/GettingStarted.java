@@ -205,18 +205,18 @@ public class GettingStarted {
 		
 		createTranscriptSchema(ctx);
 		createJobCertificateSchema(ctx);
-		
-		/* Creating Credential Definitions
-		 * 
+
+		/**
+		 * Creating Credential Definitions
 		 * Credential Definition is similar in that the keys that the Issuer uses for the signing of Credentials also satisfies a specific Credential Schema.
-		 * 
-		 * It references it's associated schema, announces who is going to be issuing credentials with that schema, what type of signature method they plan to use 
+		 *
+		 * It references it's associated schema, announces who is going to be issuing credentials with that schema, what type of signature method they plan to use
 		 * (“CL” = “Camenisch Lysyanskya”, the default method used for zero-knowledge proofs by indy), how they plan to handle revocation, and so forth.
-		 * 
-		 * It’s not possible to update data in an existing Credential Definition. If a CredDef needs to be evolved (for example, a key needs to be rotated), 
+		 *
+		 * It’s not possible to update data in an existing Credential Definition. If a CredDef needs to be evolved (for example, a key needs to be rotated),
 		 * then a new Credential Definition needs to be created by a new Issuer DID.
-		 * 
-		 * A Credential Definition can be created and saved in the Ledger an Endorser. 
+		 *
+		 * A Credential Definition can be created and saved in the Ledger an Endorser.
 		 */
 		
 		createTranscriptCredentialDefinition(ctx);
@@ -560,15 +560,20 @@ public class GettingStarted {
 		String schemaRequest = Ledger.buildSchemaRequest(ctx.governmentDid, schemaResult.getSchemaJson()).get();
 		signAndSubmitRequest(ctx, ctx.governmentWallet, ctx.governmentDid, schemaRequest);
 	}
-	
+
+	/**
+	 * Credential definition 등록과정(Faber College에서 실행)
+	 *  @param ctx
+	 *  @throws Exception
+	 */
 	void createTranscriptCredentialDefinition(Context ctx) throws Exception {
 		
 		// 1. Faber get the Transcript Credential Schema
 		
 		String getSchemaRequest = Ledger.buildGetSchemaRequest(ctx.faberDid, ctx.transcriptSchemaId).get();
 		String getSchemaResponse = Ledger.submitRequest(ctx.pool, getSchemaRequest).get();
-		log.info("getSchemaResponse : " + getSchemaResponse);
 		ParseResponseResult parseSchemaResult = Ledger.parseGetSchemaResponse(getSchemaResponse).get();
+		log.info("getSchemaResponse : " + getSchemaResponse);
 
 		// 2. Faber creates the Credential Definition related to the received Credential Schema
 		
@@ -671,11 +676,20 @@ public class GettingStarted {
 		 * 
 		 * Alice also needs to get the Credential Definition corresponding to the Credential Definition Id in the Transcript Credential Offer.
 		 */
-		
-		String credDefResponse = submitRequest(ctx, Ledger.buildGetCredDefRequest(ctx.aliceDid, transcriptCredDefId).get());
+
+		String credDefRequest = Ledger.buildGetCredDefRequest(ctx.aliceDid, transcriptCredDefId).get();
+		log.info("credDefRequest : {}", credDefRequest);
+//		String credDefResponse = submitRequest(ctx, credDefRequest); // 여기서 문제 발생. data, seqNo, txnTime이 null
+		String credDefResponse = PoolUtils.ensurePreviousRequestApplied(ctx.pool, credDefRequest, response -> {
+			JSONObject responseObject = new JSONObject(response);
+			return !responseObject.getJSONObject("result").isNull("seqNo");
+		});
+		log.info("credDefResponse : {}", credDefResponse);
+
+
 		ParseResponseResult parsedCredDefResponse = Ledger.parseGetCredDefResponse(credDefResponse).get();
 		String transcriptCredDef = parsedCredDefResponse.getObjectJson();
-		
+
 		// 5. Alice creates a Credential Request of the issuance of the Transcript Credential
 
 		ProverCreateCredentialRequestResult credentialRequestResult = Anoncreds.proverCreateCredentialReq(ctx.aliceWallet, ctx.aliceDidForFaber, transcriptCredOffer, transcriptCredDef, ctx.aliceMasterSecretId).get();

@@ -2,8 +2,10 @@ package com.bpnsolution.hyperledgerindydemo.example.util;
 
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.hyperledger.indy.sdk.IndyException;
+import org.hyperledger.indy.sdk.ledger.Ledger;
 import org.hyperledger.indy.sdk.pool.Pool;
 import org.hyperledger.indy.sdk.pool.PoolJSONParameters;
+import org.json.JSONException;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -14,6 +16,8 @@ public class PoolUtils {
 
 	private static final String DEFAULT_POOL_NAME = "default_pool";
 	public static final int PROTOCOL_VERSION = 2;
+	private static final int RESUBMIT_REQUEST_TIMEOUT = 5_000;
+	private static final int RESUBMIT_REQUEST_CNT = 3;
 
 
 	private static File createGenesisTxnFile(String filename) throws IOException {
@@ -50,7 +54,28 @@ public class PoolUtils {
 		File genesisTxnFile = createGenesisTxnFile("temp.txn");
 		PoolJSONParameters.CreatePoolLedgerConfigJSONParameter createPoolLedgerConfigJSONParameter
 				= new PoolJSONParameters.CreatePoolLedgerConfigJSONParameter(genesisTxnFile.getAbsolutePath());
-		Pool.createPoolLedgerConfig(DEFAULT_POOL_NAME, createPoolLedgerConfigJSONParameter.toJson()).get();
-		return DEFAULT_POOL_NAME;
+		Pool.createPoolLedgerConfig(poolName, createPoolLedgerConfigJSONParameter.toJson()).get();
+		return poolName;
+	}
+
+	public interface PoolResponseChecker {
+		boolean check(String response);
+	}
+
+	public static String ensurePreviousRequestApplied(Pool pool, String checkerRequest, PoolResponseChecker checker) throws IndyException, ExecutionException, InterruptedException {
+		for (int i = 0; i < RESUBMIT_REQUEST_CNT; i++) {
+			String response = Ledger.submitRequest(pool, checkerRequest).get();
+			try {
+				if (checker.check(response)) {
+					return response;
+				}
+			} catch (JSONException e) {
+				e.printStackTrace();
+				System.err.println(e.toString());
+				System.err.println(response);
+			}
+			Thread.sleep(RESUBMIT_REQUEST_TIMEOUT);
+		}
+		throw new IllegalStateException("Request가 Ledger에 적용안됨!!!");
 	}
 }
